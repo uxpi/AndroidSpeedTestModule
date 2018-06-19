@@ -51,6 +51,14 @@ public class MainActivity extends AppCompatActivity {
 
         speedTest.speedTestEventListener(new SpeedTestEventListener() {
             @Override
+            public void onDownloadPreExecute() {
+            }
+
+            @Override
+            public void onUploadPreExecute() {
+            }
+
+            @Override
             public void onDownloadChanged(final double speedMbps, final double elapsedTime) {
                 runOnUiThread(new Runnable() {
                     @SuppressLint("DefaultLocale")

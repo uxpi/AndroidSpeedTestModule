@@ -37,6 +37,8 @@ public class SpeedTest {
     private final static int threads = 4;
     private int callsToDownloadPostExecute = 0;
     private int callsToUploadPostExecute = 0;
+    private int callsToDownloadPreExecute = 0;
+    private int callsToUploadPreExecute = 0;
     private boolean downloadErrorPresented = false;
     private boolean uploadErrorPresented = false;
     private double lastDownloadSpeed = 0.00;
@@ -74,6 +76,7 @@ public class SpeedTest {
         speedTools.resetTime();
         speedTools.setDelayTime(2.0);
         callsToDownloadPostExecute = 0;
+        callsToDownloadPreExecute = 0;
         for(int i = 0; i < threads; i++){
             downloadTasks[i] = new DownloadTest();
             downloadTasks[i].executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, downloadUrl);
@@ -85,6 +88,7 @@ public class SpeedTest {
         speedTools.resetTime();
         speedTools.setDelayTime(0.5);
         callsToUploadPostExecute = 0;
+        callsToUploadPreExecute = 0;
         for(int i = 0; i < threads; i++){
             uploadTasks[i] = new UploadTest();
             uploadTasks[i].executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uploadUrl);
@@ -127,6 +131,16 @@ public class SpeedTest {
     private class DownloadTest extends AsyncTask<String, Void, Void> {
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            callsToDownloadPreExecute++;
+            if(callsToDownloadPreExecute < threads){
+                return;
+            }
+            speedTestEventListener.onDownloadPreExecute();
+        }
+
+        @Override
         protected Void doInBackground(String... urlString) {
             try {
                 URL url = new URL(urlString[0]);
@@ -166,6 +180,16 @@ public class SpeedTest {
     }
 
     private class UploadTest extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            callsToUploadPreExecute++;
+            if(callsToUploadPreExecute < threads){
+                return;
+            }
+            speedTestEventListener.onUploadPreExecute();
+        }
 
         @Override
         protected Void doInBackground(String... urlString) {
