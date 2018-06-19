@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -205,6 +206,8 @@ public class SpeedTest {
                 responses.add(client.newCall(request).execute());
                 responses.get(responses.size() - 1).close();
             } catch (IllegalStateException e) {
+                Log.v("Upload", "Socket closed on timeout");
+            } catch (ProtocolException e){
                 Log.v("Upload", "Socket closed on timeout");
             } catch (Exception e) {
                 Log.e("Upload", "Exception", e);
