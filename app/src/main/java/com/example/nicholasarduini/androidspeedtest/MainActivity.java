@@ -81,6 +81,14 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onDownloadComplete(double speedMbps) {
+            }
+
+            @Override
+            public void onUploadComplete(double speedMbps) {
+            }
+
+            @Override
             public void testComplete() {
                 enableButtons();
             }

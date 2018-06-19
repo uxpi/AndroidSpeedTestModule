@@ -39,6 +39,8 @@ public class SpeedTest {
     private int callsToUploadPostExecute = 0;
     private boolean downloadErrorPresented = false;
     private boolean uploadErrorPresented = false;
+    private double lastDownloadSpeed = 0.00;
+    private double lastUploadSpeed = 0.00;
 
     public SpeedTest(Context context) {
         speedTools = new SpeedTestTools();
@@ -92,6 +94,7 @@ public class SpeedTest {
     final ProgressResponseBody.ProgressListener downloadProgressListener = new ProgressResponseBody.ProgressListener() {
         @Override
         public void onProgress(final double speedMbps, final double elapsedTime) {
+            lastDownloadSpeed = speedMbps;
             speedTestEventListener.onDownloadChanged(speedMbps, elapsedTime);
         }
     };
@@ -99,6 +102,7 @@ public class SpeedTest {
     final ProgressRequestBody.ProgressListener uploadProgressListener = new ProgressRequestBody.ProgressListener() {
         @Override
         public void onProgress(final double speedMbps, final double elapsedTime) {
+            lastUploadSpeed = speedMbps;
             speedTestEventListener.onUploadChanged(speedMbps, elapsedTime);
         }
     };
@@ -156,6 +160,7 @@ public class SpeedTest {
 
             //closeResponses();
             //speedTestEventListener.testComplete();
+            speedTestEventListener.onDownloadComplete(lastDownloadSpeed);
             startUpload();
         }
     }
@@ -199,6 +204,7 @@ public class SpeedTest {
             }
 
             closeResponses();
+            speedTestEventListener.onUploadComplete(lastUploadSpeed);
             speedTestEventListener.testComplete();
         }
     }
