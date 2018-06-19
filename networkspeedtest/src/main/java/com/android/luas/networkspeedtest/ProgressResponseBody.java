@@ -51,11 +51,12 @@ public class ProgressResponseBody extends ResponseBody {
                     return bytesRead;
                 }
 
-                if(speedTools.getElapsedTime() >= SpeedTest.testLength){
+                if(speedTools.getElapsedTime() >= SpeedTest.currentTestLength){
                     source.close();
+                    return bytesRead;
                 }
 
-                progressListener.onProgress(speedMbps, speedTools.getElapsedTime());
+                progressListener.onProgress(speedMbps, speedTools.getElapsedTime(), bytesRead);
 
                 return bytesRead;
             }
@@ -63,6 +64,6 @@ public class ProgressResponseBody extends ResponseBody {
     }
 
     public interface ProgressListener {
-        void onProgress(double mbps, double elapsedTime);
+        void onProgress(double mbps, double elapsedTime, long byteCount);
     }
 }

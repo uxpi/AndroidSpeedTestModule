@@ -59,16 +59,16 @@ public class ProgressRequestBody extends RequestBody {
                 return;
             }
 
-            if(speedTools.getElapsedTime() >= SpeedTest.testLength){
+            if(speedTools.getElapsedTime() >= SpeedTest.currentTestLength){
                 delegate().close();
                 return;
             }
 
-            progressListener.onProgress(speedMbps, speedTools.getElapsedTime());
+            progressListener.onProgress(speedMbps, speedTools.getElapsedTime(), byteCount);
         }
     }
 
     public interface ProgressListener {
-        void onProgress(double mbps, double elapsedTime);
+        void onProgress(double mbps, double elapsedTime, long byteCount);
     }
 }

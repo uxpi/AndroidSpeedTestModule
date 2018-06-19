@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         speedTest = new SpeedTest(getApplicationContext());
         speedTest.setDownloadUrl("https://nodespeed.forb.luas.ml/download");
         speedTest.setUploadUrl("https://nodespeed.forb.luas.ml/upload");
+        speedTest.setTestLength(8);
 
         speedTest.speedTestEventListener(new SpeedTestEventListener() {
             @Override
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                         loadingCircle.setVisibility(View.GONE);
                         downloadSpeedLabel.setText(String.format("%.2f Mbps", speedMbps));
 
-                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.testLength) * 100);
+                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.currentTestLength) * 100);
                         testProgress.setProgress(progressPercentage);
                     }
                 });
@@ -82,18 +83,22 @@ public class MainActivity extends AppCompatActivity {
                         loadingCircle.setVisibility(View.GONE);
                         uploadSpeedLabel.setText(String.format("%.2f Mbps", speedMbps));
 
-                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.testLength) * 100);
+                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.currentTestLength) * 100);
                         testProgress.setProgress(progressPercentage);
                     }
                 });
             }
 
             @Override
-            public void onDownloadComplete(double speedMbps) {
+            public void onDownloadComplete(double speedMbps, long totalBytesRead) {
+                testProgress.setProgress(100);
+                System.out.println("Total MB read: " + totalBytesRead / (1000 * 1000));
             }
 
             @Override
-            public void onUploadComplete(double speedMbps) {
+            public void onUploadComplete(double speedMbps, long totalBytesWritten) {
+                testProgress.setProgress(100);
+                System.out.println("Total MB written: " + totalBytesWritten / (1000 * 1000));
             }
 
             @Override

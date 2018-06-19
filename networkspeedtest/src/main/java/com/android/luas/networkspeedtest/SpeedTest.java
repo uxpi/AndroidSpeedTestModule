@@ -25,6 +25,9 @@ public class SpeedTest {
     private String uploadUrl = "https://nodespeed.forb.luas.ml/upload";
     private String downloadUrl = "https://nodespeed.forb.luas.ml/download";
 
+    private static int initialTestLength = 2;
+    private static int testLength = 8;
+
     private SpeedTestEventListener speedTestEventListener;
 
     private ArrayList<Response> responses;
@@ -34,16 +37,21 @@ public class SpeedTest {
     private OkHttpClient client;
     private SpeedTestTools speedTools;
     private File uploadFile;
-    public final static int testLength = 8; //seconds
+    public static int currentTestLength = testLength;
     private final static int threads = 4;
     private int callsToDownloadPostExecute = 0;
     private int callsToUploadPostExecute = 0;
     private int callsToDownloadPreExecute = 0;
     private int callsToUploadPreExecute = 0;
+    private int callsToInitialDownloadPostExecute = 0;
     private boolean downloadErrorPresented = false;
     private boolean uploadErrorPresented = false;
     private double lastDownloadSpeed = 0.00;
     private double lastUploadSpeed = 0.00;
+    private long totalBytesRead = 0;
+    private long totalBytesWritten = 0;
+
+    private boolean initialDownload = true;
 
     public SpeedTest(Context context) {
         speedTools = new SpeedTestTools();
@@ -52,6 +60,10 @@ public class SpeedTest {
         uploadTasks = new UploadTest[threads];
 
         uploadFile = SpeedTestTools.getFile(context);
+    }
+
+    public void setTestLength(int length){
+        testLength = length;
     }
 
     public void setUploadUrl(String url){
@@ -65,14 +77,28 @@ public class SpeedTest {
     public void startTest(){
         downloadErrorPresented = false;
         uploadErrorPresented = false;
-        startDownload();
+        totalBytesRead = 0;
+        totalBytesWritten = 0;
+        startInitialDownload();
     }
 
     public void speedTestEventListener(SpeedTestEventListener eventListener){
         speedTestEventListener = eventListener;
     }
 
+    public void startInitialDownload(){
+        callsToInitialDownloadPostExecute = 0;
+        initialDownload = true;
+        currentTestLength = initialTestLength;
+        createClient();
+        for(int i = 0; i < threads; i++){
+            new InitialDownload().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, downloadUrl);
+        }
+    }
+
     private void startDownload(){
+        initialDownload = false;
+        currentTestLength = testLength;
         createClient();
         speedTools.resetTime();
         speedTools.setDelayTime(2.0);
@@ -98,16 +124,19 @@ public class SpeedTest {
 
     final ProgressResponseBody.ProgressListener downloadProgressListener = new ProgressResponseBody.ProgressListener() {
         @Override
-        public void onProgress(final double speedMbps, final double elapsedTime) {
+        public void onProgress(final double speedMbps, final double elapsedTime, long byteCount) {
+            if(initialDownload) { return; }
             lastDownloadSpeed = speedMbps;
+            totalBytesRead += byteCount;
             speedTestEventListener.onDownloadChanged(speedMbps, elapsedTime);
         }
     };
 
     final ProgressRequestBody.ProgressListener uploadProgressListener = new ProgressRequestBody.ProgressListener() {
         @Override
-        public void onProgress(final double speedMbps, final double elapsedTime) {
+        public void onProgress(final double speedMbps, final double elapsedTime, long byteCount) {
             lastUploadSpeed = speedMbps;
+            totalBytesWritten += byteCount;
             speedTestEventListener.onUploadChanged(speedMbps, elapsedTime);
         }
     };
@@ -127,6 +156,39 @@ public class SpeedTest {
                 .retryOnConnectionFailure(false)
                 .socketFactory(new CustomSocketFactory())
                 .build();
+    }
+
+    private class InitialDownload extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... urlString) {
+            try {
+                URL url = new URL(urlString[0]);
+                Request request = new Request.Builder()
+                        .url(url)
+                        .cacheControl(CacheControl.FORCE_NETWORK)
+                        .build();
+                responses.add(client.newCall(request).execute());
+                responses.get(responses.size()-1).body().bytes();
+                responses.get(responses.size()-1).close();
+            } catch (IllegalStateException e){
+                Log.v("Download", "Socket closed on timeout");
+            } catch (Exception e) {
+                Log.e("Download", "Exception", e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void param) {
+            callsToInitialDownloadPostExecute++;
+            if(callsToInitialDownloadPostExecute < threads){
+                return;
+            }
+
+            closeResponses();
+            startDownload();
+        }
     }
 
     private class DownloadTest extends AsyncTask<String, Void, Void> {
@@ -173,9 +235,9 @@ public class SpeedTest {
                 return;
             }
 
-            //closeResponses();
+            speedTestEventListener.onDownloadComplete(lastDownloadSpeed, totalBytesRead);
             //speedTestEventListener.testComplete();
-            speedTestEventListener.onDownloadComplete(lastDownloadSpeed);
+            //closeResponses();
             startUpload();
         }
     }
@@ -231,7 +293,7 @@ public class SpeedTest {
             }
 
             closeResponses();
-            speedTestEventListener.onUploadComplete(lastUploadSpeed);
+            speedTestEventListener.onUploadComplete(lastUploadSpeed, totalBytesWritten);
             speedTestEventListener.testComplete();
         }
     }
