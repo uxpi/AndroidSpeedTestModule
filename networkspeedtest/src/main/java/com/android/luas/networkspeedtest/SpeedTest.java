@@ -37,7 +37,7 @@ public class SpeedTest {
     private OkHttpClient client;
     private SpeedTestTools speedTools;
     private File uploadFile;
-    public static int currentTestLength = testLength;
+    public static int currentTestLength = initialTestLength;
     private final static int threads = 4;
     private int callsToDownloadPostExecute = 0;
     private int callsToUploadPostExecute = 0;
@@ -50,6 +50,7 @@ public class SpeedTest {
     private double lastUploadSpeed = 0.00;
     private long totalBytesRead = 0;
     private long totalBytesWritten = 0;
+    private int numInitialDownloads = 1;
 
     private boolean initialDownload = true;
 
@@ -90,6 +91,7 @@ public class SpeedTest {
         callsToInitialDownloadPostExecute = 0;
         initialDownload = true;
         currentTestLength = initialTestLength;
+        speedTools.resetTime();
         createClient();
         for(int i = 0; i < threads; i++){
             new InitialDownload().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, downloadUrl);
@@ -187,7 +189,12 @@ public class SpeedTest {
             }
 
             closeResponses();
-            startDownload();
+            numInitialDownloads--;
+            if(numInitialDownloads > 0){
+                startInitialDownload();
+            } else {
+                startDownload();
+            }
         }
     }
 

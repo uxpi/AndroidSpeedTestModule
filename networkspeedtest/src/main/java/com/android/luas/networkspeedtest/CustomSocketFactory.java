@@ -36,6 +36,7 @@ public class CustomSocketFactory extends SocketFactory {
     public Socket customSocket(Socket s) throws SocketException {
         s.setReceiveBufferSize(1024*1024*1024);
         s.setTcpNoDelay(false);
+        s.setKeepAlive(true);
         s.setPerformancePreferences(0,1,2);
         return s;
     }
