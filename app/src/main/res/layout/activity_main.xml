@@ -7,21 +7,38 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/beingTestButton"
-        android:layout_width="145dp"
-        android:layout_height="70dp"
+    android:id="@+id/beginTestButton"
+    android:layout_width="145dp"
+    android:layout_height="70dp"
+    android:layout_marginBottom="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginLeft="8dp"
+    android:layout_marginRight="8dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="8dp"
+    android:text="Begin Test"
+    android:textColor="@android:color/background_light"
+    android:textSize="20sp"
+    android:backgroundTint="@color/bellBlue"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/stopTestButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="Begin Test"
+        android:text="S"
         android:textColor="@android:color/background_light"
         android:textSize="20sp"
         android:backgroundTint="@color/bellBlue"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -72,7 +89,7 @@
         android:textColor="@color/bellBlue"
         android:textSize="40sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/beingTestButton"
+        app:layout_constraintBottom_toTopOf="@+id/beginTestButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/downloadSpeed" />
@@ -122,6 +139,6 @@
         app:layout_constraintBottom_toTopOf="@+id/testProgress"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/beingTestButton" />
+        app:layout_constraintTop_toBottomOf="@+id/beginTestButton" />
 
 </android.support.constraint.ConstraintLayout>

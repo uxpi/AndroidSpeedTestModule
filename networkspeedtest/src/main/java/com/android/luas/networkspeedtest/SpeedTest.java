@@ -37,7 +37,8 @@ public class SpeedTest {
     private OkHttpClient client;
     private SpeedTestTools speedTools;
     private File uploadFile;
-    public static int currentTestLength = initialTestLength;
+    private static int currentTestLength = initialTestLength;
+    private static boolean testComplete = true;
     private final static int threads = 4;
     private int callsToDownloadPostExecute = 0;
     private int callsToUploadPostExecute = 0;
@@ -75,11 +76,24 @@ public class SpeedTest {
         this.downloadUrl = url;
     }
 
+    public void stopTest(){
+        testComplete = true;
+    }
+
+    public static int getCurrentTestLength(){
+        return currentTestLength;
+    }
+
+    public static boolean getTestComplete(){
+        return testComplete;
+    }
+
     public void startTest(){
         downloadErrorPresented = false;
         uploadErrorPresented = false;
         totalBytesRead = 0;
         totalBytesWritten = 0;
+        testComplete = false;
         startInitialDownload();
     }
 
@@ -302,6 +316,7 @@ public class SpeedTest {
             closeResponses();
             speedTestEventListener.onUploadComplete(lastUploadSpeed, totalBytesWritten);
             speedTestEventListener.testComplete();
+            testComplete = true;
         }
     }
 

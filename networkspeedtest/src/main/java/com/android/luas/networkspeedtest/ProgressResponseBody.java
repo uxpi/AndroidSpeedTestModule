@@ -51,7 +51,7 @@ public class ProgressResponseBody extends ResponseBody {
                     return bytesRead;
                 }
 
-                if(speedTools.getElapsedTime() >= SpeedTest.currentTestLength){
+                if(speedTools.getElapsedTime() >= SpeedTest.getCurrentTestLength() || SpeedTest.getTestComplete()){
                     source.close();
                     return bytesRead;
                 }

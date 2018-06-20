@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView downloadSpeedLabel;
     private TextView uploadSpeedLabel;
     private Button beginTestButton;
+    private Button stopTestButton;
     private ProgressBar testProgress;
     private ProgressBar loadingCircle;
 
@@ -30,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
         downloadSpeedLabel = findViewById(R.id.downloadSpeed);
         uploadSpeedLabel = findViewById(R.id.uploadSpeed);
-        beginTestButton = findViewById(R.id.beingTestButton);
+        beginTestButton = findViewById(R.id.beginTestButton);
+        stopTestButton = findViewById(R.id.stopTestButton);
         testProgress = findViewById(R.id.testProgress);
         loadingCircle = findViewById(R.id.loadingCircle);
         loadingCircle.setVisibility(View.GONE);
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                         loadingCircle.setVisibility(View.GONE);
                         downloadSpeedLabel.setText(String.format("%.2f Mbps", speedMbps));
 
-                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.currentTestLength) * 100);
+                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.getCurrentTestLength()) * 100);
                         testProgress.setProgress(progressPercentage);
                     }
                 });
@@ -83,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                         loadingCircle.setVisibility(View.GONE);
                         uploadSpeedLabel.setText(String.format("%.2f Mbps", speedMbps));
 
-                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.currentTestLength) * 100);
+                        int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.getCurrentTestLength()) * 100);
                         testProgress.setProgress(progressPercentage);
                     }
                 });
@@ -123,6 +125,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 disableButtons();
                 speedTest.startTest();
+            }
+        });
+
+        stopTestButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                speedTest.stopTest();
             }
         });
     }
