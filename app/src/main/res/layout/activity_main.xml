@@ -6,124 +6,292 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-    android:id="@+id/beginTestButton"
-    android:layout_width="145dp"
-    android:layout_height="70dp"
-    android:layout_marginBottom="8dp"
-    android:layout_marginEnd="8dp"
-    android:layout_marginLeft="8dp"
-    android:layout_marginRight="8dp"
-    android:layout_marginStart="8dp"
-    android:layout_marginTop="8dp"
-    android:text="Begin Test"
-    android:textColor="@android:color/background_light"
-    android:textSize="20sp"
-    android:backgroundTint="@color/bellBlue"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/stopTestButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="S"
-        android:textColor="@android:color/background_light"
-        android:textSize="20sp"
-        android:backgroundTint="@color/bellBlue"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/downloadSpeed"
+    <RelativeLayout
+        android:id="@+id/relativeLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="0.00 Mbps"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/startSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/constraintLayout"
+            android:layout_alignLeft="@+id/constraintLayout"
+            android:layout_alignStart="@+id/constraintLayout"
+            android:layout_marginBottom="25dp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
+            android:text="@string/speedStartGauge"
+            android:textAlignment="center"
+            android:textColor="@color/bellBlue"
+            android:textSize="14sp"
+            android:textStyle="normal" />
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <pl.pawelkleczkowski.customgauge.CustomGauge
+                android:id="@+id/speedGauge"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_centerHorizontal="true"
+                android:padding="18dp"
+                app:gaugeEndValue="200"
+                app:gaugePointEndColor="@color/blue_end"
+                app:gaugePointStartColor="@color/blue_start"
+                app:gaugeStartAngle="135"
+                app:gaugeStartValue="0"
+                app:gaugeStrokeCap="ROUND"
+                app:gaugeStrokeColor="@color/light_grey"
+                app:gaugeStrokeWidth="14dp"
+                app:gaugeSweepAngle="270"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteY="8dp" />
+
+            <TextView
+                android:id="@+id/speedLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/_0_00"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@+id/speedGauge"
+                app:layout_constraintEnd_toEndOf="@+id/speedGauge"
+                app:layout_constraintStart_toStartOf="@+id/speedGauge"
+                app:layout_constraintTop_toTopOf="@+id/speedGauge" />
+
+            <TextView
+                android:id="@+id/mbsLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginStart="8dp"
+                android:text="@string/mbps"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/speedGauge"
+                app:layout_constraintStart_toStartOf="@+id/speedGauge"
+                app:layout_constraintTop_toBottomOf="@+id/speedLabel" />
+
+            <TextView
+                android:id="@+id/testTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/download"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="16sp"
+                android:textStyle="normal"
+                app:layout_constraintEnd_toEndOf="@+id/speedGauge"
+                app:layout_constraintStart_toStartOf="@+id/speedGauge"
+                app:layout_constraintTop_toBottomOf="@+id/mbsLabel" />
+        </android.support.constraint.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/endSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/constraintLayout"
+            android:layout_alignRight="@+id/constraintLayout"
+            android:layout_alignEnd="@+id/constraintLayout"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="25dp"
+            android:text="@string/speedEndGauge"
+            android:textAlignment="center"
+            android:textColor="@color/bellBlue"
+            android:textSize="14sp"
+            android:textStyle="normal" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/pingResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:text="Ping  20.6ms"
+        android:textAlignment="center"
+        android:gravity="center"
         android:textColor="@color/bellBlue"
-        android:textSize="40sp"
+        android:textSize="14sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
 
-    <TextView
-        android:id="@+id/download"
+    <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="8dp"
-        android:alpha="0.75"
-        android:text="Download"
-        android:textColor="@color/bellBlue"
-        android:textSize="15sp"
+        android:layout_margin="8dp"
+        android:alpha="0.85"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/downloadSpeed" />
+        app:layout_constraintTop_toBottomOf="@+id/pingResult">
 
-    <TextView
-        android:id="@+id/uploadSpeed"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="0.00 Mbps"
-        android:textColor="@color/bellBlue"
-        android:textSize="40sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/beginTestButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/downloadSpeed" />
+        <LinearLayout
+            android:id="@+id/downloadLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:gravity="center"
+            android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/upload"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="8dp"
-        android:alpha="0.75"
-        android:text="Upload"
-        android:textColor="@color/bellBlue"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/uploadSpeed" />
+            <TextView
+                android:id="@+id/downloadSpeed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/_0_00"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="38sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/speedGauge"
+                tools:layout_editor_absoluteX="8dp" />
+
+            <TextView
+                android:id="@+id/downloadMbps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mbps"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/speedGauge"
+                tools:layout_editor_absoluteX="8dp" />
+
+            <TextView
+                android:id="@+id/totalDownBytes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="160MB"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/speedGauge"
+                tools:layout_editor_absoluteX="8dp" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/bellBlue"
+                android:background="@drawable/ic_download"
+                android:tint="@color/bellBlue" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/uploadLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/uploadSpeed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/_0_00"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="38sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/speedGauge"
+                tools:layout_editor_absoluteX="281dp" />
+
+            <TextView
+                android:id="@+id/uploadMbps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mbps"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/speedGauge"
+                tools:layout_editor_absoluteX="281dp" />
+
+            <TextView
+                android:id="@+id/totalUpBytes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="160MB"
+                android:textAlignment="center"
+                android:textColor="@color/bellBlue"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@+id/speedGauge"
+                tools:layout_editor_absoluteX="8dp" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/bellBlue"
+                android:background="@drawable/ic_upload"
+                android:tint="@color/bellBlue" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 
     <ProgressBar
         android:id="@+id/testProgress"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginStart="8dp"
-        android:scaleY="4"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="8dp"
+        android:scaleY="6"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <ProgressBar
         android:id="@+id/loadingCircle"
@@ -135,10 +303,30 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/testProgress"
+        app:layout_constraintBottom_toTopOf="@id/testProgress"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/beginTestButton" />
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Switch
+        android:id="@+id/sslSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:text="SSL"
+        android:textColor="@color/bellBlue"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/resultsGraph"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/loadingCircle"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
 </android.support.constraint.ConstraintLayout>

@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<color name="colorPrimary">#3F51B5</color>
-<color name="colorPrimaryDark">#303F9F</color>
-<color name="colorAccent">#1f54a0</color>
+    <color name="bellBlue">#0166c2</color>
+    <color name="colorPrimary">#0166c2</color>
+    <color name="colorPrimaryDark">#0057a6</color>
+    <color name="colorAccent">#0166c2</color>
 
-<color name="bellBlue">#1f54a0</color>
+    <color name="light_grey">#e0e0e0</color>
+
+    <color name="blue_start">#0084ff</color>
+    <color name="blue_end">#0056a5</color>
 </resources>

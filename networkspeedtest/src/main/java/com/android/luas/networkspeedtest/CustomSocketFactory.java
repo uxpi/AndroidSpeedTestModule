@@ -33,10 +33,11 @@ public class CustomSocketFactory extends SocketFactory {
         return customSocket(new Socket(address, port, localAddress, localPort));
     }
 
-    public Socket customSocket(Socket s) throws SocketException {
+    private Socket customSocket(Socket s) throws SocketException {
         s.setReceiveBufferSize(1024*1024*1024);
         s.setTcpNoDelay(false);
         s.setKeepAlive(true);
+        s.setSoLinger(false, 0);
         s.setPerformancePreferences(0,1,2);
         return s;
     }

@@ -1,6 +1,13 @@
 <resources>
-    <string name="app_name">Android Speed Test</string>
+    <string name="app_name">Network Speed Test M</string>
     <string name="download_error">Download could not be completed, please check your internet connection</string>
     <string name="upload_error">Upload could not be completed, please check your internet connection</string>
     <string name="okay">Okay</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="start">Start</string>
+    <string name="mbps">Mbps</string>
+    <string name="_0_00">0.00</string>
+    <string name="speedEndGauge">200</string>
+    <string name="speedStartGauge">0</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.android.luas.networkspeedtest;
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -43,7 +45,7 @@ public class ProgressResponseBody extends ResponseBody {
 
         return new ForwardingSource(source) {
 
-            @Override public long read(Buffer sink, long byteCount) throws IOException {
+            @Override public long read(@NonNull Buffer sink, long byteCount) throws IOException {
                 long bytesRead = super.read(sink, byteCount);
                 double speedMbps = speedTools.speedTestCalc(bytesRead);
 

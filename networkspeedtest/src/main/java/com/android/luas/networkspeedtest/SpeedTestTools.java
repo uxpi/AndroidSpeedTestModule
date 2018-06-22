@@ -3,8 +3,10 @@ package com.android.luas.networkspeedtest;
 import android.content.Context;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class SpeedTestTools {
@@ -59,7 +61,23 @@ public class SpeedTestTools {
         elapsedTime = 0;
     }
 
-    public static File createFile(Context context, int megaBytes){
+    public static double pingUrl(String url){
+        try {
+            Process p = Runtime.getRuntime().exec("ping -c 1 " + url);
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            stdInput.readLine();
+            String ping = stdInput.readLine().split("time=")[1].split(" ")[0];
+
+            p.destroy();
+            return Double.parseDouble(ping);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
+    private static File createFile(Context context, int megaBytes){
         int bytes = 1000*1000;
         OutputStream outputStream;
         File file = null;

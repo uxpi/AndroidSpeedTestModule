@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.rashish.myapplication.MainActivity">
+    <item
+        android:id="@+id/startTestAction"
+        android:orderInCategory="0"
+        android:title="Start"
+        android:icon="@drawable/ic_start_test"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/stopTestAction"
+        android:orderInCategory="0"
+        android:title="Stop"
+        android:icon="@drawable/ic_close_menu"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/showHistoryAction"
+        android:orderInCategory="0"
+        android:title="History"
+        android:icon="@drawable/ic_history"
+        app:showAsAction="always" />
+</menu>

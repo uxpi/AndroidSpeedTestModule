@@ -5,16 +5,21 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
+import okhttp3.Cache;
 import okhttp3.CacheControl;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -22,8 +27,9 @@ import okhttp3.Response;
 public class SpeedTest {
 
     final MediaType BinType = MediaType.parse("application/x-binary; charset=utf-8");
-    private String uploadUrl = "https://nodespeed.forb.luas.ml/upload";
-    private String downloadUrl = "https://nodespeed.forb.luas.ml/download";
+    private static String uploadUrl = "https://nodespeed.forb.luas.ml/upload";
+    private static String downloadUrl = "https://nodespeed.forb.luas.ml/download";
+    private static String pingURL = "nodespeed.forb.luas.ml";
 
     private static int initialTestLength = 2;
     private static int testLength = 8;
@@ -37,6 +43,8 @@ public class SpeedTest {
     private OkHttpClient client;
     private SpeedTestTools speedTools;
     private File uploadFile;
+    private SpeedResults speedResults;
+    private static SQLiteDatabaseHandler db;
     private static int currentTestLength = initialTestLength;
     private static boolean testComplete = true;
     private final static int threads = 4;
@@ -52,6 +60,7 @@ public class SpeedTest {
     private long totalBytesRead = 0;
     private long totalBytesWritten = 0;
     private int numInitialDownloads = 1;
+    private long lastUpdateGraphTime;
 
     private boolean initialDownload = true;
 
@@ -61,7 +70,10 @@ public class SpeedTest {
         downloadTasks = new DownloadTest[threads];
         uploadTasks = new UploadTest[threads];
 
+        lastUpdateGraphTime = System.currentTimeMillis();
         uploadFile = SpeedTestTools.getFile(context);
+        speedResults = new SpeedResults();
+        db = new SQLiteDatabaseHandler(context);
     }
 
     public void setTestLength(int length){
@@ -88,12 +100,17 @@ public class SpeedTest {
         return testComplete;
     }
 
-    public void startTest(){
+    public void startTest(boolean sslOn){
         downloadErrorPresented = false;
         uploadErrorPresented = false;
         totalBytesRead = 0;
         totalBytesWritten = 0;
+        lastDownloadSpeed = 0;
+        lastUploadSpeed = 0;
         testComplete = false;
+        speedResults.setSslOn(sslOn);
+        speedResults.setPingTime(SpeedTestTools.pingUrl(pingURL));
+        speedTestEventListener.onPingResult(speedResults.getPingTime());
         startInitialDownload();
     }
 
@@ -101,7 +118,11 @@ public class SpeedTest {
         speedTestEventListener = eventListener;
     }
 
-    public void startInitialDownload(){
+    public static List<SpeedResults> getAllResults(){
+        return db.allSpeedResults();
+    }
+
+    private void startInitialDownload(){
         callsToInitialDownloadPostExecute = 0;
         initialDownload = true;
         currentTestLength = initialTestLength;
@@ -117,7 +138,7 @@ public class SpeedTest {
         currentTestLength = testLength;
         createClient();
         speedTools.resetTime();
-        speedTools.setDelayTime(2.0);
+        speedTools.setDelayTime(0.8);
         callsToDownloadPostExecute = 0;
         callsToDownloadPreExecute = 0;
         for(int i = 0; i < threads; i++){
@@ -138,27 +159,44 @@ public class SpeedTest {
         }
     }
 
-    final ProgressResponseBody.ProgressListener downloadProgressListener = new ProgressResponseBody.ProgressListener() {
+    private final ProgressResponseBody.ProgressListener downloadProgressListener = new ProgressResponseBody.ProgressListener() {
         @Override
         public void onProgress(final double speedMbps, final double elapsedTime, long byteCount) {
             if(initialDownload) { return; }
             lastDownloadSpeed = speedMbps;
             totalBytesRead += byteCount;
-            speedTestEventListener.onDownloadChanged(speedMbps, elapsedTime);
+
+            boolean updateGraph = false;
+            if(System.currentTimeMillis() - lastUpdateGraphTime > 400){
+                updateGraph = true;
+                lastUpdateGraphTime = System.currentTimeMillis();
+            }
+
+            speedTestEventListener.onDownloadChanged(speedMbps, elapsedTime, updateGraph);
         }
     };
 
-    final ProgressRequestBody.ProgressListener uploadProgressListener = new ProgressRequestBody.ProgressListener() {
+    private final ProgressRequestBody.ProgressListener uploadProgressListener = new ProgressRequestBody.ProgressListener() {
         @Override
         public void onProgress(final double speedMbps, final double elapsedTime, long byteCount) {
             lastUploadSpeed = speedMbps;
             totalBytesWritten += byteCount;
-            speedTestEventListener.onUploadChanged(speedMbps, elapsedTime);
+
+            boolean updateGraph = false;
+            if(System.currentTimeMillis() - lastUpdateGraphTime > 400){
+                updateGraph = true;
+                lastUpdateGraphTime = System.currentTimeMillis();
+            }
+
+            speedTestEventListener.onUploadChanged(speedMbps, elapsedTime, updateGraph);
         }
     };
 
-
     private void createClient(){
+        List<Protocol> protocols = new ArrayList<>();
+        protocols.add(Protocol.HTTP_2);
+        protocols.add(Protocol.HTTP_1_1);
+
         client = new OkHttpClient.Builder()
                 .addNetworkInterceptor(new Interceptor() {
                     @Override public Response intercept(@NonNull Chain chain) throws IOException {
@@ -168,6 +206,7 @@ public class SpeedTest {
                                 .build();
                     }
                 })
+                .protocols(protocols)
                 .cache(null)
                 .retryOnConnectionFailure(false)
                 .socketFactory(new CustomSocketFactory())
@@ -202,7 +241,7 @@ public class SpeedTest {
                 return;
             }
 
-            closeResponses();
+            new CloseResponses().execute();
             numInitialDownloads--;
             if(numInitialDownloads > 0){
                 startInitialDownload();
@@ -257,8 +296,9 @@ public class SpeedTest {
             }
 
             speedTestEventListener.onDownloadComplete(lastDownloadSpeed, totalBytesRead);
-            //speedTestEventListener.testComplete();
-            //closeResponses();
+            long totalMB = totalBytesRead / (1000 * 1000);
+            speedResults.setDownloadSpeed(lastDownloadSpeed);
+            speedResults.setTotalDownloadMB(totalMB);
             startUpload();
         }
     }
@@ -300,9 +340,7 @@ public class SpeedTest {
                         speedTestEventListener.uploadError();
                     }
                 }
-
             }
-
             return null;
         }
 
@@ -313,21 +351,36 @@ public class SpeedTest {
                 return;
             }
 
-            closeResponses();
+            new CloseResponses().execute();
             speedTestEventListener.onUploadComplete(lastUploadSpeed, totalBytesWritten);
             speedTestEventListener.testComplete();
+            long totalMB = totalBytesWritten / (1000 * 1000);
+            speedResults.setUploadSpeed(lastUploadSpeed);
+            speedResults.setTotalUploadMB(totalMB);
+            db.addSpeedResult(speedResults);
             testComplete = true;
         }
     }
 
-    private void closeResponses(){
-        for(Response r : responses){
-            if(r != null) {
-                r.close();
-            }
-        }
-        responses.removeAll(responses);
+    private class CloseResponses extends AsyncTask<String, Void, Void> {
 
-        client.dispatcher().cancelAll();
+        @Override
+        protected Void doInBackground(String... urlString) {
+            try {
+                for(Response r : responses){
+                    if(r != null) {
+                        r.close();
+                    }
+                }
+                responses.removeAll(responses);
+                client.dispatcher().cancelAll();
+            } catch (IllegalStateException e) {
+                Log.v("Close Response", "Socket closed on timeout");
+            } catch (Exception e) {
+                Log.e("Close Response", "Exception", e);
+            }
+
+            return null;
+        }
     }
 }

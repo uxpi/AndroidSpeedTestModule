@@ -1,5 +1,7 @@
 package com.android.luas.networkspeedtest;
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -38,7 +40,7 @@ public class ProgressRequestBody extends RequestBody {
     }
 
     @Override
-    public void writeTo(BufferedSink sink) throws IOException {
+    public void writeTo(@NonNull BufferedSink sink) throws IOException {
         CountingSink mCountingSink = new CountingSink(sink);
         BufferedSink bufferedSink = Okio.buffer(mCountingSink);
         requestBody.writeTo(bufferedSink);
@@ -47,11 +49,11 @@ public class ProgressRequestBody extends RequestBody {
 
     protected final class CountingSink extends ForwardingSink {
 
-        public CountingSink(Sink delegate) {
+        CountingSink(Sink delegate) {
             super(delegate);
         }
         @Override
-        public void write(Buffer source, long byteCount) throws IOException {
+        public void write(@NonNull Buffer source, long byteCount) throws IOException {
             super.write(source, byteCount);
             double speedMbps = speedTools.speedTestCalc(byteCount);
 
