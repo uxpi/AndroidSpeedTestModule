@@ -1,5 +1,6 @@
 package com.example.nicholasarduini.androidspeedtest;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -12,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Switch;
@@ -36,15 +38,18 @@ public class MainActivity extends AppCompatActivity {
     private TextView totalUpBytes;
     private TextView speedLabel;
     private TextView testTypeLabel;
+    private TextView startSpeedLabel;
+    private TextView endSpeedLabel;
+    private TextView speedMbsLabel;
     private ProgressBar testProgress;
     private ProgressBar loadingCircle;
     private CustomGauge speedGauge;
     private LinearLayout downloadLayout;
     private LinearLayout uploadLayout;
     private Switch sslSwitch;
-    private MenuItem startTestButton;
     private MenuItem stopTestButton;
     private LineChart speedGraph;
+    private Button startTestCircleButton;
 
     private SpeedTest speedTest;
 
@@ -62,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
         totalUpBytes = findViewById(R.id.totalUpBytes);
         speedLabel = findViewById(R.id.speedLabel);
         testTypeLabel = findViewById(R.id.testTypeLabel);
+        startSpeedLabel = findViewById(R.id.startSpeed);
+        endSpeedLabel = findViewById(R.id.endSpeed);
+        speedMbsLabel = findViewById(R.id.mbsLabel);
         testProgress = findViewById(R.id.testProgress);
         loadingCircle = findViewById(R.id.loadingCircle);
         speedGauge = findViewById(R.id.speedGauge);
@@ -69,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         uploadLayout = findViewById(R.id.uploadLayout);
         sslSwitch = findViewById(R.id.sslSwitch);
         speedGraph = findViewById(R.id.resultsGraph);
+        startTestCircleButton = findViewById(R.id.startTestCircleButton);
 
         LineData data = new LineData();
         data.addDataSet(null);
@@ -86,13 +95,14 @@ public class MainActivity extends AppCompatActivity {
         speedGraph.setDescription(null);
         speedGraph.setTouchEnabled(false);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getSupportActionBar().setElevation(0);
         }
 
         hideResults();
-        loadingCircle.setVisibility(View.GONE);
+        loadingCircle.setAlpha(0);
         sslSwitch.setChecked(true);
+        setGauge(false, 0);
 
         speedTest = new SpeedTest(getApplicationContext());
         speedTest.setTestLength(8);
@@ -101,13 +111,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPingResult(double ping) {
                 pingResult.setText(String.format("Ping  %.2fms", ping));
-                pingResult.animate().alpha(1).setDuration(250).setInterpolator(new DecelerateInterpolator());
+                pingResult.animate().alpha(1).setDuration(500).setInterpolator(new DecelerateInterpolator());
             }
 
             @Override
             public void onDownloadPreExecute() {
                 testTypeLabel.setText(R.string.download);
-                loadingCircle.setVisibility(View.GONE);
+                loadingCircle.setAlpha(0);
                 speedGauge.setEndValue(GAUGE_END_VALUE);
             }
 
@@ -139,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("DefaultLocale")
             @Override
             public void onDownloadComplete(double speedMbps, long totalBytesRead) {
-                downloadLayout.setVisibility(View.VISIBLE);
                 downloadLayout.animate().alpha(1).setDuration(250).setInterpolator(new DecelerateInterpolator());
                 downloadSpeedLabel.setText(String.format("%.2f", speedMbps));
                 totalDownBytes.setText(String.format("%dMB", totalBytesRead / (1000 * 1000)));
@@ -156,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void testComplete() {
-                enableButtons();
+                testCompleteInit();
             }
 
             @Override
@@ -169,12 +178,20 @@ public class MainActivity extends AppCompatActivity {
                 createAlert(getResources().getString(R.string.upload_error));
             }
         });
+
+        startTestCircleButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                getServer();
+                testStartingInit();
+                hideResults();
+                speedTest.startTest(sslSwitch.isChecked());
+            }
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.speed_test, menu);
-        startTestButton = menu.findItem(R.id.startTestAction);
         stopTestButton = menu.findItem(R.id.stopTestAction);
         stopTestButton.setVisible(false);
         return true;
@@ -184,13 +201,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if(id == R.id.startTestAction) {
-            getServer();
-            disableButtons();
-            hideResults();
-            resetValues();
-            speedTest.startTest(sslSwitch.isChecked());
-        } else if(id == R.id.stopTestAction){
+        if(id == R.id.stopTestAction){
             speedTest.stopTest();
         } else if(id == R.id.showHistoryAction){
             Intent myIntent = new Intent(MainActivity.this, SpeedResultsActivity.class);
@@ -291,37 +302,78 @@ public class MainActivity extends AppCompatActivity {
         uploadLayout.setVisibility(View.GONE);
     }
 
-    public void resetValues(){
-        speedGraph.getData().clearValues();
-        speedGauge.setValue(0);
-        speedLabel.setText("");
-
-    }
-
-    public void enableButtons(){
+    public void testCompleteInit(){
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 testProgress.setProgress(100);
-                loadingCircle.setVisibility(View.GONE);
+                loadingCircle.setAlpha(0);
                 testTypeLabel.setText("");
-                startTestButton.setVisible(true);
                 stopTestButton.setVisible(false);
+                startTestCircleButton.setAlpha(1);
+                startTestCircleButton.setVisibility(View.VISIBLE);
+                setGauge(false, 800);
             }
         });
     }
 
-    public void disableButtons(){
+    public void testStartingInit(){
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                speedGraph.getData().clearValues();
+                speedGauge.setValue(0);
+                speedLabel.setText("");
                 testProgress.setProgress(0);
-                loadingCircle.setVisibility(View.VISIBLE);
-                startTestButton.setVisible(false);
+                loadingCircle.setAlpha(1);
                 stopTestButton.setVisible(true);
+                startTestCircleButton.setAlpha(0);
+                startTestCircleButton.setVisibility(View.GONE);
+                setGauge(true, 800);
             }
         });
     }
+
+    public void setGauge(boolean testRunning, int duration){
+        if(testRunning){
+            animateGauge(360, 270, speedGauge, duration);
+            speedGauge.setPointEndColor(getResources().getColor(R.color.blue_end));
+            speedGauge.setPointStartColor(getResources().getColor(R.color.blue_start));
+            speedGauge.setStrokeColor(getResources().getColor(R.color.light_grey));
+            speedGauge.setSweepAngle(270);
+            speedLabel.setAlpha(1);
+            speedMbsLabel.setAlpha(1);
+            startSpeedLabel.setAlpha(1);
+            endSpeedLabel.setAlpha(1);
+        } else {
+            animateGauge(270, 360, speedGauge, duration);
+            speedGauge.setPointEndColor(getResources().getColor(R.color.bellBlue));
+            speedGauge.setPointStartColor(getResources().getColor(R.color.bellBlue));
+            speedGauge.setStrokeColor(getResources().getColor(R.color.bellBlue));
+            speedGauge.setSweepAngle(360);
+            speedLabel.setAlpha(0);
+            speedMbsLabel.setAlpha(0);
+            startSpeedLabel.setAlpha(0);
+            endSpeedLabel.setAlpha(0);
+            speedGauge.setValue(0);
+        }
+    }
+
+    public void animateGauge(int initialValue, int finalValue, final CustomGauge gauge, int duration) {
+        ValueAnimator valueAnimator = ValueAnimator.ofInt(initialValue, finalValue);
+        valueAnimator.setDuration(duration);
+
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                gauge.setSweepAngle((int) valueAnimator.getAnimatedValue());
+                gauge.setValue(0);
+
+            }
+        });
+        valueAnimator.start();
+    }
+
 }
 
 //https://speed.hetzner.de/100MB.bin

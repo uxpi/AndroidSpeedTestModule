@@ -4,12 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.rashish.myapplication.MainActivity">
     <item
-        android:id="@+id/startTestAction"
-        android:orderInCategory="0"
-        android:title="Start"
-        android:icon="@drawable/ic_start_test"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/stopTestAction"
         android:orderInCategory="0"
         android:title="Stop"

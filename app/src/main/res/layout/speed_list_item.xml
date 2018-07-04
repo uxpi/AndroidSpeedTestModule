@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="25dp">
+    android:layout_marginTop="20dp"
+    android:layout_marginBottom="10dp">
 
     <TextView
         android:id="@+id/sslOn"
@@ -34,7 +35,7 @@
         android:padding="8dp"
         android:text="TextView"
         android:textAlignment="center"
-        android:textColor="@color/bellBlue"
+        android:textColor="@color/grey"
         android:textSize="14sp"
         android:textStyle="normal"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -87,7 +88,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/mbps"
                 android:textAlignment="center"
-                android:textColor="@color/bellBlue"
+                android:textColor="@color/grey"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -97,7 +98,7 @@
                 android:layout_height="wrap_content"
                 android:text="160MB"
                 android:textAlignment="center"
-                android:textColor="@color/bellBlue"
+                android:textColor="@color/grey"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -137,7 +138,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/mbps"
                 android:textAlignment="center"
-                android:textColor="@color/bellBlue"
+                android:textColor="@color/grey"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -147,7 +148,7 @@
                 android:layout_height="wrap_content"
                 android:text="160MB"
                 android:textAlignment="center"
-                android:textColor="@color/bellBlue"
+                android:textColor="@color/grey"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>

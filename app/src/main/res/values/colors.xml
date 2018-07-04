@@ -5,7 +5,11 @@
     <color name="colorPrimaryDark">#0057a6</color>
     <color name="colorAccent">#0166c2</color>
 
+    <color name="grey">#a2afb2</color>
     <color name="light_grey">#e0e0e0</color>
+
+    <color name="magenta">#FF00FF</color>
+    <color name="cyan">#00FFFF</color>
 
     <color name="blue_start">#0084ff</color>
     <color name="blue_end">#0056a5</color>
