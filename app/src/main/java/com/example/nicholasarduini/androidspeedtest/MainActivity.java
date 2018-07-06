@@ -1,12 +1,17 @@
 package com.example.nicholasarduini.androidspeedtest;
 
+import android.Manifest;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -29,6 +34,8 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import pl.pawelkleczkowski.customgauge.CustomGauge;
 
+import static com.example.nicholasarduini.androidspeedtest.TelephonyModule.getRfInfo;
+
 public class MainActivity extends AppCompatActivity {
 
     private TextView pingResult;
@@ -50,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem stopTestButton;
     private LineChart speedGraph;
     private Button startTestCircleButton;
+    private Button cellDataButton;
 
     private SpeedTest speedTest;
 
@@ -78,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         sslSwitch = findViewById(R.id.sslSwitch);
         speedGraph = findViewById(R.id.resultsGraph);
         startTestCircleButton = findViewById(R.id.startTestCircleButton);
+        cellDataButton = findViewById(R.id.cellData);
 
         LineData data = new LineData();
         data.addDataSet(null);
@@ -187,6 +196,53 @@ public class MainActivity extends AppCompatActivity {
                 speedTest.startTest(sslSwitch.isChecked());
             }
         });
+
+        cellDataButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                getPermission();
+            }
+        });
+    }
+
+    private static Boolean mPermissionGranted = false;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[],
+                                           @NonNull int[] grantResults) {
+        mPermissionGranted = false;
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mPermissionGranted = true;
+                }
+            }
+        }
+
+        updateTelphonyData();
+    }
+
+    private void getPermission() {
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
+    }
+
+    private static CellData cellData;
+    private void updateTelphonyData() {
+        if(mPermissionGranted){
+            TelephonyModule rfInfo = new TelephonyModule(getApplicationContext());
+            cellData = rfInfo.getRfInfo();
+            CellDataDialog cdd = new CellDataDialog(this, cellData);
+            cdd.show();
+        }
     }
 
     @Override
@@ -258,6 +314,9 @@ public class MainActivity extends AppCompatActivity {
             speedTest.setDownloadUrl("http://nodespeed.forb.luas.ml/download");
             speedTest.setUploadUrl("http://nodespeed.forb.luas.ml/upload");
         }
+        //http://d11qof99tjkti7.cloudfront.net/data.zip
+        speedTest.setDownloadUrl("http://d11qof99tjkti7.cloudfront.net/data.zip");
+        speedTest.setUploadUrl("http://ipv4.ikoula.testdebit.info/");
     }
 
     @SuppressLint("DefaultLocale")
@@ -373,6 +432,8 @@ public class MainActivity extends AppCompatActivity {
         });
         valueAnimator.start();
     }
+
+
 
 }
 
