@@ -35,8 +35,8 @@ public class SpeedTestTools {
 
     public double speedTestCalc(long byteCount){
         bytesWritten += byteCount;
-        stopTime = System.currentTimeMillis() / 1000;
-        elapsedTime = (stopTime - startTime);
+        stopTime = System.currentTimeMillis();
+        elapsedTime = (stopTime - startTime) / 1000;
         double speedMbps = ((bytesWritten / elapsedTime / 1024.0 / 1024.0) * 8);
 
         if(Double.isInfinite(speedMbps)) {
@@ -53,7 +53,7 @@ public class SpeedTestTools {
     }
 
     public void resetTime(){
-        startTime = System.currentTimeMillis() / 1000;
+        startTime = System.currentTimeMillis();
         stopTime = startTime;
         bytesWritten = 0;
         totalSpeeds = 0;

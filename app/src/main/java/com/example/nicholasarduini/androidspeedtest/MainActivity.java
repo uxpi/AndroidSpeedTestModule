@@ -4,11 +4,13 @@ import android.Manifest;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.Build;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -32,35 +34,28 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
-import pl.pawelkleczkowski.customgauge.CustomGauge;
+import java.util.List;
 
-import static com.example.nicholasarduini.androidspeedtest.TelephonyModule.getRfInfo;
+import pl.pawelkleczkowski.customgauge.CustomGauge;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView pingResult;
-    private TextView downloadSpeedLabel;
-    private TextView uploadSpeedLabel;
-    private TextView totalDownBytes;
-    private TextView totalUpBytes;
-    private TextView speedLabel;
-    private TextView testTypeLabel;
-    private TextView startSpeedLabel;
-    private TextView endSpeedLabel;
-    private TextView speedMbsLabel;
-    private ProgressBar testProgress;
-    private ProgressBar loadingCircle;
+    private TextView pingResult, downloadSpeedLabel, uploadSpeedLabel, totalDownBytes, totalUpBytes,
+                     speedLabel, testTypeLabel, startSpeedLabel, endSpeedLabel, speedMbsLabel;
+    private Button startTestCircleButton, cellDataButton;
+    private ProgressBar testProgress, loadingCircle;
     private CustomGauge speedGauge;
-    private LinearLayout downloadLayout;
-    private LinearLayout uploadLayout;
+    private LinearLayout downloadLayout, uploadLayout;
     private Switch sslSwitch;
     private MenuItem stopTestButton;
     private LineChart speedGraph;
-    private Button startTestCircleButton;
-    private Button cellDataButton;
 
     private SpeedTest speedTest;
+    private SpeedResults speedResults;
+    private static SQLiteDatabaseHandler db;
 
+    private static Boolean accessCourseLocationPermissionGranted = false;
+    private static final int PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION = 1;
     private static int GAUGE_END_VALUE = 200;
 
     @Override
@@ -104,14 +99,17 @@ public class MainActivity extends AppCompatActivity {
         speedGraph.setDescription(null);
         speedGraph.setTouchEnabled(false);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getSupportActionBar().setElevation(0);
-        }
-
+        getSupportActionBar().setElevation(0);
         hideResults();
         loadingCircle.setAlpha(0);
-        sslSwitch.setChecked(true);
+        sslSwitch.setChecked(false);
+        sslSwitch.setVisibility(View.GONE);
         setGauge(false, 0);
+
+        speedResults = new SpeedResults();
+        db = new SQLiteDatabaseHandler(getApplicationContext());
+        getPermission();
+        setConnectionType();
 
         speedTest = new SpeedTest(getApplicationContext());
         speedTest.setTestLength(8);
@@ -121,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
             public void onPingResult(double ping) {
                 pingResult.setText(String.format("Ping  %.2fms", ping));
                 pingResult.animate().alpha(1).setDuration(500).setInterpolator(new DecelerateInterpolator());
+                speedResults.setPingTime(ping);
             }
 
             @Override
@@ -160,7 +159,10 @@ public class MainActivity extends AppCompatActivity {
             public void onDownloadComplete(double speedMbps, long totalBytesRead) {
                 downloadLayout.animate().alpha(1).setDuration(250).setInterpolator(new DecelerateInterpolator());
                 downloadSpeedLabel.setText(String.format("%.2f", speedMbps));
-                totalDownBytes.setText(String.format("%dMB", totalBytesRead / (1000 * 1000)));
+                long totalMB = totalBytesRead / (1000 * 1000);
+                totalDownBytes.setText(String.format("%dMB", totalMB));
+                speedResults.setDownloadSpeed(speedMbps);
+                speedResults.setTotalDownloadMB(totalMB);
             }
 
             @SuppressLint("DefaultLocale")
@@ -169,7 +171,11 @@ public class MainActivity extends AppCompatActivity {
                 uploadLayout.setVisibility(View.VISIBLE);
                 uploadLayout.animate().alpha(1).setDuration(250).setInterpolator(new DecelerateInterpolator());
                 uploadSpeedLabel.setText(String.format("%.2f", speedMbps));
-                totalUpBytes.setText(String.format("%dMB", totalBytesWritten / (1000 * 1000)));
+                long totalMB = totalBytesWritten / (1000 * 1000);
+                totalUpBytes.setText(String.format("%dMB", totalMB));
+                speedResults.setUploadSpeed(speedMbps);
+                speedResults.setTotalUploadMB(totalMB);
+                db.addSpeedResult(speedResults);
             }
 
             @Override
@@ -194,55 +200,61 @@ public class MainActivity extends AppCompatActivity {
                 testStartingInit();
                 hideResults();
                 speedTest.startTest(sslSwitch.isChecked());
+                speedResults.setCellData(getTelephonyData(false));
+                speedResults.setSslOn(sslSwitch.isChecked());
             }
         });
 
         cellDataButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                getPermission();
+                getTelephonyData(true);
             }
         });
     }
 
-    private static Boolean mPermissionGranted = false;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    public static List<SpeedResults> getAllResults(){
+        return db.allSpeedResults();
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
-        mPermissionGranted = false;
+        accessCourseLocationPermissionGranted = false;
         switch (requestCode) {
-            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+            case PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mPermissionGranted = true;
+                    accessCourseLocationPermissionGranted = true;
                 }
             }
         }
-
-        updateTelphonyData();
     }
 
     private void getPermission() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mPermissionGranted = true;
+            accessCourseLocationPermissionGranted = true;
         } else {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION);
         }
     }
 
-    private static CellData cellData;
-    private void updateTelphonyData() {
-        if(mPermissionGranted){
+    private CellData getTelephonyData(boolean display) {
+        CellData cellData = new CellData();
+        if(accessCourseLocationPermissionGranted){
             TelephonyModule rfInfo = new TelephonyModule(getApplicationContext());
             cellData = rfInfo.getRfInfo();
-            CellDataDialog cdd = new CellDataDialog(this, cellData);
-            cdd.show();
+            if(display) {
+                CellDataDialog cdd = new CellDataDialog(this, cellData);
+                cdd.show();
+            }
+            return cellData;
         }
+        return cellData;
     }
 
     @Override
@@ -267,7 +279,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void addEntry(double y, boolean download) {
+    int maxDownloadPoints = 0;
+    private void addEntry(double elapsedTime, double y, boolean download) {
         if(speedGraph.getData() != null) {
             int index = download ? 0 : 1;
 
@@ -281,7 +294,9 @@ public class MainActivity extends AppCompatActivity {
                 speedGraph.getData().addDataSet(set);
             }
 
-            set.addEntry(new Entry(set.getEntryCount(), (float) (y)));
+            //set.getEntryCount()
+            set.addEntry(new Entry((float) elapsedTime, (float) (y)));
+            if(download){ maxDownloadPoints = set.getEntryCount(); }
             speedGraph.getData().notifyDataChanged();
             speedGraph.notifyDataSetChanged();
             speedGraph.setVisibleXRangeMaximum(120);
@@ -301,9 +316,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         set.setDrawCircles(false);
-        set.setLineWidth(4f);
+        set.setLineWidth(6f);
         set.setDrawValues(false);
         return set;
+    }
+
+    public void setConnectionType(){
+        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null) {
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+                speedResults.setUsingCellular(false);
+                cellDataButton.setAlpha(0);
+            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                speedResults.setUsingCellular(true);
+                cellDataButton.setAlpha(1);
+            }
+        } else {
+            speedResults.setUsingCellular(false);
+            cellDataButton.setAlpha(0);
+        }
     }
 
     public void getServer(){
@@ -316,7 +348,7 @@ public class MainActivity extends AppCompatActivity {
         }
         //http://d11qof99tjkti7.cloudfront.net/data.zip
         speedTest.setDownloadUrl("http://d11qof99tjkti7.cloudfront.net/data.zip");
-        speedTest.setUploadUrl("http://ipv4.ikoula.testdebit.info/");
+        //speedTest.setUploadUrl("https://speed.forb.luas.ml/down");
     }
 
     @SuppressLint("DefaultLocale")
@@ -332,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
         int progressPercentage = (int) (elapsedTime / ((double) SpeedTest.getCurrentTestLength()) * 100);
         testProgress.setProgress(progressPercentage);
 
-        if(updateGraph) { addEntry(speedMbps, download); }
+        if(updateGraph) { addEntry(elapsedTime, speedMbps, download); }
     }
 
     public void createAlert(final String message){
@@ -380,7 +412,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                speedGraph.getData().clearValues();
+                speedGraph.clearValues();
                 speedGauge.setValue(0);
                 speedLabel.setText("");
                 testProgress.setProgress(0);
@@ -388,6 +420,8 @@ public class MainActivity extends AppCompatActivity {
                 stopTestButton.setVisible(true);
                 startTestCircleButton.setAlpha(0);
                 startTestCircleButton.setVisibility(View.GONE);
+                speedResults.clear();
+                setConnectionType();
                 setGauge(true, 800);
             }
         });
@@ -432,9 +466,6 @@ public class MainActivity extends AppCompatActivity {
         });
         valueAnimator.start();
     }
-
-
-
 }
 
 //https://speed.hetzner.de/100MB.bin

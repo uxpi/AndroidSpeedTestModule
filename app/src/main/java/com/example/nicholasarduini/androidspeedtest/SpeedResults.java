@@ -1,4 +1,4 @@
-package com.android.luas.networkspeedtest;
+package com.example.nicholasarduini.androidspeedtest;
 
 public class SpeedResults {
     private int id;
@@ -9,8 +9,22 @@ public class SpeedResults {
     private long totalUploadMB;
     private double pingTime;
     private boolean sslOn;
+    private boolean usingCellular;
+
+    private CellData cellData;
 
     SpeedResults() {
+        cellData = new CellData();
+    }
+
+    public void clear(){
+        downloadSpeed = 0.0;
+        uploadSpeed = 0.0;
+        totalDownloadMB = 0;
+        totalUploadMB = 0;
+        pingTime = 0.0;
+        sslOn = false;
+        cellData.clear();
     }
 
     public int getId() {
@@ -75,5 +89,21 @@ public class SpeedResults {
 
     public void setSslOn(boolean sslOn) {
         this.sslOn = sslOn;
+    }
+
+    public CellData getCellData() {
+        return cellData;
+    }
+
+    public void setCellData(CellData cellData) {
+        this.cellData = cellData;
+    }
+
+    public boolean isUsingCellular() {
+        return usingCellular;
+    }
+
+    public void setUsingCellular(boolean usingCellular) {
+        this.usingCellular = usingCellular;
     }
 }

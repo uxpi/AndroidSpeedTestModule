@@ -1,5 +1,6 @@
 package com.example.nicholasarduini.androidspeedtest;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.os.Bundle;
@@ -8,18 +9,16 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class CellDataDialog extends Dialog {
-    private Activity activity;
-    private Dialog dialog;
     private Button dismissButton;
-    private TextView eNodeB, localCellId, earfcn, rsrp, sinr, pci, mcc, mnc, ta;
+    private TextView eNodeB, localCellId, earfcn, rsrp, sinr, pci, mcc, mnc, ta, lat, lon;
     private CellData cellData;
 
     public CellDataDialog(Activity activity, CellData cellData) {
         super(activity);
-        this.activity = activity;
         this.cellData = cellData;
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,16 +33,20 @@ public class CellDataDialog extends Dialog {
         mcc = findViewById(R.id.mcc);
         mnc = findViewById(R.id.mnc);
         ta = findViewById(R.id.ta);
+        lat = findViewById(R.id.lat);
+        lon = findViewById(R.id.lon);
 
-        eNodeB.setText(Integer.toString(cellData.geteNodeB()));
-        localCellId.setText(Integer.toString(cellData.getLocalCellId()));
-        earfcn.setText(Integer.toString(cellData.getEarfcn()));
-        rsrp.setText(Integer.toString(cellData.getdBm()));
-        sinr.setText(Integer.toString(cellData.getSinr()));
-        pci.setText(Integer.toString(cellData.getPci()));
-        mcc.setText(Integer.toString(cellData.getMcc()));
-        mnc.setText(Integer.toString(cellData.getMnc()));
-        ta.setText(Integer.toString(cellData.getTa()));
+        eNodeB.setText(String.valueOf(String.format("%d", cellData.geteNodeB())));
+        localCellId.setText(String.valueOf(String.format("%d", cellData.getLocalCellId())));
+        earfcn.setText(String.valueOf(String.format("%d", cellData.getEarfcn())));
+        rsrp.setText(String.valueOf(String.format("%d", cellData.getdBm())));
+        sinr.setText(String.valueOf(String.format("%d", cellData.getSinr())));
+        pci.setText(String.valueOf(String.format("%d", cellData.getPci())));
+        mcc.setText(String.valueOf(String.format("%d", cellData.getMcc())));
+        mnc.setText(String.valueOf(String.format("%d", cellData.getMnc())));
+        ta.setText(String.valueOf(String.format("%d", cellData.getTa())));
+        lat.setText(String.valueOf(String.format("%f", cellData.getLat())));
+        lon.setText(String.valueOf(String.format("%f", cellData.getLon())));
 
 
         dismissButton = findViewById(R.id.dismissButton);

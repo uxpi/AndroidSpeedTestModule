@@ -2,6 +2,8 @@ package com.example.nicholasarduini.androidspeedtest;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
 import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -16,12 +18,14 @@ import java.util.List;
 
 public class TelephonyModule {
 
-    private TelephonyManager tm;
+    private static TelephonyManager tm;
+    private static Context context;
     static List<CellInfo> cellInfoList;
 
     @SuppressLint("MissingPermission")
-    public TelephonyModule(Context context) {
-        tm = context.getSystemService(TelephonyManager.class);
+    public TelephonyModule(Context c) {
+        tm = c.getSystemService(TelephonyManager.class);
+        context = c;
 
         cellInfoList = tm.getAllCellInfo();
     }
@@ -35,8 +39,10 @@ public class TelephonyModule {
     }
 
 
+    @SuppressLint("MissingPermission")
     public static CellData getRfInfo() {
         CellData cellData = new CellData();
+        tm.getAllCellInfo();
         if(cellInfoList.size() <= 0) { return cellData; }
         CellInfo cellInfo = cellInfoList.get(0);
         if (cellInfo instanceof CellInfoLte) {
@@ -57,11 +63,14 @@ public class TelephonyModule {
                 cellData.setMnc(cellIdentityLte.getMnc());
                 cellData.setTa(cellSignalStrengthLte.getTimingAdvance());
 
+                LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                cellData.setLat(location.getLatitude());
+                cellData.setLon(location.getLongitude());
+
                 //cid = cellIdentityLte.getCi();
                 //cellIdHex = decToHex(cellIdentityLte.getCi());
                 //tac = cellIdentityLte.getTac();
-
-                System.out.println(cellData.toString());
             }
         }
 

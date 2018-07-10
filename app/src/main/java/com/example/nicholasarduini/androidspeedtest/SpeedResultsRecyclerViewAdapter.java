@@ -1,14 +1,14 @@
 package com.example.nicholasarduini.androidspeedtest;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
-
-import com.android.luas.networkspeedtest.SpeedResults;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,10 +19,12 @@ public class SpeedResultsRecyclerViewAdapter extends RecyclerView.Adapter<SpeedR
 
     private List<SpeedResults> items;
     private int itemLayout;
+    private Activity activity;
 
-    SpeedResultsRecyclerViewAdapter(List<SpeedResults> items, int itemLayout){
+    SpeedResultsRecyclerViewAdapter(List<SpeedResults> items, int itemLayout, Activity activity){
         this.items = items;
         this.itemLayout = itemLayout;
+        this.activity = activity;
     }
 
     @NonNull
@@ -35,7 +37,7 @@ public class SpeedResultsRecyclerViewAdapter extends RecyclerView.Adapter<SpeedR
     @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        SpeedResults item = items.get(position);
+        final SpeedResults item = items.get(position);
 
         holder.dateTime.setText(getFormattedDateString(item.getTime()));
         holder.downloadSpeed.setText(String.valueOf(String.format("%.2f", item.getDownloadSpeed())));
@@ -43,10 +45,26 @@ public class SpeedResultsRecyclerViewAdapter extends RecyclerView.Adapter<SpeedR
         holder.totalDownload.setText(String.valueOf(String.format("%dMB", item.getTotalDownloadMB())));
         holder.totalUpload.setText(String.valueOf(String.format("%dMB", item.getTotalUploadMB())));
         holder.pingTime.setText(String.valueOf(String.format("Ping  %.2fms", item.getPingTime())));
+
+        holder.cellDataButton.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                CellDataDialog cdd = new CellDataDialog(activity, item.getCellData());
+                cdd.show();
+            }
+        });
+
         if(item.isSslOn()){
-            holder.sslOn.setVisibility(View.VISIBLE);
+            holder.sslOn.setAlpha(1);
         } else {
-            holder.sslOn.setVisibility(View.GONE);
+            holder.sslOn.setAlpha(0);
+        }
+
+        if(item.isUsingCellular()){
+            holder.cellDataButton.setAlpha(1);
+        } else {
+            holder.cellDataButton.setAlpha(0);
         }
     }
 
@@ -80,6 +98,8 @@ public class SpeedResultsRecyclerViewAdapter extends RecyclerView.Adapter<SpeedR
         public TextView pingTime;
         public TextView sslOn;
 
+        public Button cellDataButton;
+
         ViewHolder(View itemView) {
             super(itemView);
             dateTime = itemView.findViewById(R.id.dateTime);
@@ -89,6 +109,7 @@ public class SpeedResultsRecyclerViewAdapter extends RecyclerView.Adapter<SpeedR
             totalUpload = itemView.findViewById(R.id.totalUpload);
             pingTime = itemView.findViewById(R.id.pingTime);
             sslOn = itemView.findViewById(R.id.sslOn);
+            cellDataButton = itemView.findViewById(R.id.cellDataButton);
         }
     }
 }

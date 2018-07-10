@@ -11,21 +11,37 @@ public class CellData {
     private int mnc;
     private int ta;
 
-    public CellData(){
+    private double lat;
+    private double lon;
 
+    CellData(){
+        this.eNodeB = 0;
+        this.localCellId = 0;
+        this.earfcn = 0;
+        this.dBm = 0;
+        this.sinr = 0;
+        this.pci = 0;
+        this.mcc = 0;
+        this.mnc = 0;
+        this.ta = 0;
+        this.lat = 0;
+        this.lon = 0;
     }
 
-    public CellData(int eNodeB, int localCellId, int earfcn, int dBm, int sinr, int pci, int mcc, int mnc, int ta) {
-        this.eNodeB = eNodeB;
-        this.localCellId = localCellId;
-        this.earfcn = earfcn;
-        this.dBm = dBm;
-        this.sinr = sinr;
-        this.pci = pci;
-        this.mcc = mcc;
-        this.mnc = mnc;
-        this.ta = ta;
+    public void clear(){
+        this.eNodeB = 0;
+        this.localCellId = 0;
+        this.earfcn = 0;
+        this.dBm = 0;
+        this.sinr = 0;
+        this.pci = 0;
+        this.mcc = 0;
+        this.mnc = 0;
+        this.ta = 0;
+        this.lat = 0;
+        this.lon = 0;
     }
+
 
     public String toString(){
         return "\neNodeB: " + eNodeB +
@@ -109,5 +125,21 @@ public class CellData {
 
     public void setTa(int ta) {
         this.ta = ta;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
     }
 }

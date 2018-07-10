@@ -63,6 +63,7 @@ public class ProgressRequestBody extends RequestBody {
 
             if(speedTools.getElapsedTime() >= SpeedTest.getCurrentTestLength() || SpeedTest.getTestComplete()){
                 delegate().close();
+                source.close();
                 return;
             }
 

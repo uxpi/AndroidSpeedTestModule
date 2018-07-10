@@ -8,9 +8,11 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.CacheControl;
 import okhttp3.Interceptor;
@@ -23,7 +25,7 @@ import okhttp3.Response;
 
 public class SpeedTest {
 
-    final MediaType BinType = MediaType.parse("application/x-binary; charset=utf-8");
+    private final MediaType BinType = MediaType.parse("application/x-binary; charset=utf-8");
     private static String uploadUrl = "";
     private static String downloadUrl = "";
     private static String pingURL = "nodespeed.forb.luas.ml";
@@ -40,8 +42,6 @@ public class SpeedTest {
     private OkHttpClient client;
     private SpeedTestTools speedTools;
     private File uploadFile;
-    private SpeedResults speedResults;
-    private static SQLiteDatabaseHandler db;
     private static int currentTestLength = initialTestLength;
     private static boolean testComplete = true;
     private final static int threads = 4;
@@ -58,6 +58,7 @@ public class SpeedTest {
     private long totalBytesWritten = 0;
     private int numInitialDownloads = 1;
     private long lastUpdateGraphTime;
+    private long lastProgressUpdate;
 
     private boolean initialDownload = true;
 
@@ -68,9 +69,8 @@ public class SpeedTest {
         uploadTasks = new UploadTest[threads];
 
         lastUpdateGraphTime = System.currentTimeMillis();
+        lastProgressUpdate = System.currentTimeMillis();
         uploadFile = SpeedTestTools.getFile(context);
-        speedResults = new SpeedResults();
-        db = new SQLiteDatabaseHandler(context);
     }
 
     public void setTestLength(int length){
@@ -78,11 +78,11 @@ public class SpeedTest {
     }
 
     public void setUploadUrl(String url){
-        this.uploadUrl = url;
+        uploadUrl = url;
     }
 
     public void setDownloadUrl(String url){
-        this.downloadUrl = url;
+        downloadUrl = url;
     }
 
     public void stopTest(){
@@ -105,18 +105,12 @@ public class SpeedTest {
         lastDownloadSpeed = 0;
         lastUploadSpeed = 0;
         testComplete = false;
-        speedResults.setSslOn(sslOn);
-        speedResults.setPingTime(SpeedTestTools.pingUrl(pingURL));
-        speedTestEventListener.onPingResult(speedResults.getPingTime());
+        speedTestEventListener.onPingResult(SpeedTestTools.pingUrl(pingURL));
         startInitialDownload();
     }
 
     public void speedTestEventListener(SpeedTestEventListener eventListener){
         speedTestEventListener = eventListener;
-    }
-
-    public static List<SpeedResults> getAllResults(){
-        return db.allSpeedResults();
     }
 
     private void startInitialDownload(){
@@ -135,7 +129,7 @@ public class SpeedTest {
         currentTestLength = testLength;
         createClient();
         speedTools.resetTime();
-        speedTools.setDelayTime(0.8);
+        speedTools.setDelayTime(2);
         callsToDownloadPostExecute = 0;
         callsToDownloadPreExecute = 0;
         for(int i = 0; i < threads; i++){
@@ -169,7 +163,10 @@ public class SpeedTest {
                 lastUpdateGraphTime = System.currentTimeMillis();
             }
 
-            speedTestEventListener.onDownloadChanged(speedMbps, elapsedTime, updateGraph);
+            if(System.currentTimeMillis() - lastProgressUpdate > 20 || updateGraph){
+                speedTestEventListener.onDownloadChanged(speedMbps, elapsedTime, updateGraph);
+                lastProgressUpdate = System.currentTimeMillis();
+            }
         }
     };
 
@@ -185,7 +182,10 @@ public class SpeedTest {
                 lastUpdateGraphTime = System.currentTimeMillis();
             }
 
-            speedTestEventListener.onUploadChanged(speedMbps, elapsedTime, updateGraph);
+            if(System.currentTimeMillis() - lastProgressUpdate > 20 || updateGraph){
+                speedTestEventListener.onUploadChanged(speedMbps, elapsedTime, updateGraph);
+                lastProgressUpdate = System.currentTimeMillis();
+             }
         }
     };
 
@@ -206,7 +206,10 @@ public class SpeedTest {
                 .protocols(protocols)
                 .cache(null)
                 .retryOnConnectionFailure(false)
-                .socketFactory(new CustomSocketFactory())
+                //.socketFactory(new CustomSocketFactory())
+                .readTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(5, TimeUnit.SECONDS)
                 .build();
     }
 
@@ -224,9 +227,11 @@ public class SpeedTest {
                 responses.get(responses.size()-1).body().bytes();
                 responses.get(responses.size()-1).close();
             } catch (IllegalStateException e){
-                Log.v("Download", "Socket closed on timeout");
+                Log.v("Initial Download", "Socket closed on test timeout");
+            } catch (SocketTimeoutException e){
+                Log.v("Initial Download", "Socket closed on timeout");
             } catch (Exception e) {
-                Log.e("Download", "Exception", e);
+                Log.e("Initial Download", "Exception", e);
             }
             return null;
         }
@@ -272,6 +277,8 @@ public class SpeedTest {
                 responses.get(responses.size()-1).body().bytes();
                 responses.get(responses.size()-1).close();
             } catch (IllegalStateException e){
+                Log.v("Download", "Socket closed on test timeout");
+            } catch (SocketTimeoutException e){
                 Log.v("Download", "Socket closed on timeout");
             } catch (Exception e) {
                 Log.e("Download", "Exception", e);
@@ -293,9 +300,6 @@ public class SpeedTest {
             }
 
             speedTestEventListener.onDownloadComplete(lastDownloadSpeed, totalBytesRead);
-            long totalMB = totalBytesRead / (1000 * 1000);
-            speedResults.setDownloadSpeed(lastDownloadSpeed);
-            speedResults.setTotalDownloadMB(totalMB);
             startUpload();
         }
     }
@@ -351,10 +355,6 @@ public class SpeedTest {
             new CloseResponses().execute();
             speedTestEventListener.onUploadComplete(lastUploadSpeed, totalBytesWritten);
             speedTestEventListener.testComplete();
-            long totalMB = totalBytesWritten / (1000 * 1000);
-            speedResults.setUploadSpeed(lastUploadSpeed);
-            speedResults.setTotalUploadMB(totalMB);
-            db.addSpeedResult(speedResults);
             testComplete = true;
         }
     }

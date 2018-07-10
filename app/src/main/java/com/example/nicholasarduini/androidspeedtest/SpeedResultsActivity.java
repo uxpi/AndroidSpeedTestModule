@@ -21,6 +21,6 @@ public class SpeedResultsActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(new SpeedResultsRecyclerViewAdapter(SpeedTest.getAllResults(), R.layout.speed_list_item));
+        recyclerView.setAdapter(new SpeedResultsRecyclerViewAdapter(MainActivity.getAllResults(), R.layout.speed_list_item, this));
     }
 }
